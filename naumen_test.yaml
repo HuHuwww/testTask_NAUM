@@ -1,0 +1,84 @@
+---
+- hosts: your_server
+  become: yes
+  vars:
+    your_ip: 'your.ip.address.here'
+    range_ip: '91.232.196.0/24'
+    jenkins_war_location: '/path/to/jenkins.war'
+
+  tasks:
+    - name: Установить русскую локаль
+      locale_gen:
+        name: 'ru_RU.UTF-8'
+        state: present
+
+    - name: Настроить московский часовой пояс
+      timezone:
+        name: 'Europe/Moscow'
+
+    - name: Ограничить внешний доступ к серверу
+      ufw:
+        rule: allow
+        port: '{{ item }}'
+        src: '{{ your_ip }},{{ range_ip }}'
+      with_items: [22, 80, 443]
+
+    - name: Установить Jenkins с помощью war-файла
+      copy:
+        src: '{{ jenkins_war_location }}'
+        dest: '/opt/jenkins.war'
+        owner: 'jenkins'
+        group: 'jenkins'
+        mode: '0755'
+
+    - name: Создать сервис systemd для запуска Jenkins
+      systemd:
+        name: jenkins
+        state: started
+        enabled: yes
+        daemon_reload: yes
+        service: |
+          [Unit]
+          Description=Jenkins
+          After=network.target
+
+          [Service]
+          ExecStart=/usr/bin/java -jar /opt/jenkins.war
+          User=jenkins
+          Group=jenkins
+          Restart=always
+
+          [Install]
+          WantedBy=multi-user.target
+
+    - name: Установить и настроить Prometheus и Grafana
+      include_role:
+        name: cloudalchemy.prometheus
+      include_role:
+        name: cloudalchemy.node_exporter
+      include_role:
+        name: cloudalchemy.grafana
+
+    - name: Настроить доступ к поднятым сервисам по https с помощью nginx
+      include_role:
+        name: jdauphant.nginx
+      vars:
+        nginx_sites:
+          default:
+            - listen 443 ssl
+            - server_name _
+            - ssl_certificate /etc/nginx/ssl/nginx.crt
+            - ssl_certificate_key /etc/nginx/ssl/nginx.key
+            - location / {
+                proxy_pass http://localhost:8080;
+              }
+
+    - name: Сгенерировать самоподписанный сертификат
+      command: >
+        openssl req -x509 -nodes -days 365 -newkey rsa:2048
+        -keyout /etc/nginx/ssl/nginx.key
+        -out /etc/nginx/ssl/nginx.crt
+        -subj "/C=RU/ST=Moscow/L=Moscow/O=YourOrganization/OU=YourUnit/CN=yourdomain.com"
+      args:
+        creates: /etc/nginx/ssl/nginx.crt
+

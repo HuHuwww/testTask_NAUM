@@ -1,0 +1,65 @@
+---
+- hosts: your_server
+  become: yes
+  tasks:
+    - name: Установить русскую локаль
+      locale_gen:
+        name: ru_RU.UTF-8
+        state: present
+
+    - name: Настроить московский часовой пояс
+      timezone:
+        name: Europe/Moscow
+
+    - name: Ограничить внешний доступ к серверу
+      ufw:
+        rule: allow
+        port: '{{ item }}'
+        src: your_ip
+      with_items:
+        - 22
+        - 80
+        - 443
+
+    - name: Открыть порты для диапазона 91.232.196.0/24
+      ufw:
+        rule: allow
+        port: '{{ item }}'
+        src: 91.232.196.0/24
+      with_items:
+        - 22
+        - 80
+        - 443
+
+    - name: Установить Jenkins с помощью war-файла
+      command: java -jar your_war_file_path
+
+    - name: Создать сервис systemd для запуска Jenkins
+      systemd:
+        name: jenkins
+        state: started
+        enabled: yes
+        daemon_reload: yes
+
+    - name: Установить Node Exporter для Prometheus
+      shell: |
+        wget https://github.com/prometheus/node_exporter/releases/download/v*/node_exporter-*.*-amd64.tar.gz
+        tar xvfz node_exporter-*.*-amd64.tar.gz
+        cp node_exporter-*.*-amd64/node_exporter /usr/local/bin
+        useradd --no-create-home --shell /bin/false node_exporter
+        chown node_exporter:node_exporter /usr/local/bin/node_exporter
+        systemctl start node_exporter
+        systemctl enable node_exporter
+
+    - name: Установить JMX Exporter для Prometheus
+      shell: |
+        wget https://repo1.maven.org/maven2/io/prometheus/jmx/jmx_prometheus_javaagent/0.16.1/jmx_prometheus_javaagent-0.16.1.jar
+        echo 'JAVA_OPTS="$JAVA_OPTS -javaagent:/path/to/jmx_prometheus_javaagent-0.16.1.jar=8080:/path/to/config.yaml"' >> /etc/default/jenkins
+        systemctl restart jenkins
+
+    - name: Установить и настроить Nginx
+      shell: |
+        apt-get install nginx
+        openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /etc/nginx/ssl/nginx.key -out /etc/nginx/ssl/nginx.crt
+        systemctl restart nginx
+...
