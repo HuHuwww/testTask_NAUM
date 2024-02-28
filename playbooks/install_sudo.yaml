@@ -1,0 +1,14 @@
+---
+- hosts: naumen
+  tasks:
+    - name: Install sudo
+      apt:
+        name: sudo
+        state: present
+
+    - name: Add root to visudo
+      lineinfile:
+        path: /etc/sudoers
+        regexp: '^root'
+        line: 'root ALL=(ALL) ALL'
+        validate: 'visudo -cf %s'

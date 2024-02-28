@@ -1,0 +1,53 @@
+---
+- hosts: naumen
+  become: yes
+
+  tasks:
+  
+    - name: Установить jdk
+      apt:
+        name: default-jdk
+        state: present
+
+    - name: Создание файла службы Jenkins
+      copy:
+        content: |
+          [Unit]
+          Description=Jenkins Daemon
+
+          [Service]
+          ExecStart=/usr/bin/java -jar /opt/jenkins.war
+          User=root
+          Restart=always
+
+          [Install]
+          WantedBy=multi-user.target
+        dest: /etc/systemd/system/jenkins.service
+      become: yes
+
+    - name: Перезагрузка systemd для обнаружения новой службы
+      command: systemctl daemon-reload
+      become: yes
+
+    - name: Запуск службы Jenkins
+      systemd:
+        name: jenkins
+        state: started
+        enabled: yes
+        daemon_reload: yes
+      become: yes
+
+
+
+
+    # - name: Запуск Jenkins
+    #   shell: "java -jar /opt/jenkins.war &"
+    #   args:
+    #     executable: /bin/bash
+
+    # - name: Создать сервис systemd для запуска Jenkins
+    #   systemd:
+    #     name: jenkins
+    #     state: started
+    #     enabled: yes
+    #     daemon_reload: yes

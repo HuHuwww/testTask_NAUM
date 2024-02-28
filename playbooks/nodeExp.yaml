@@ -1,0 +1,37 @@
+---
+- name: Установка Node Exporter
+  hosts: naumen
+  become: yes
+  tasks:
+    - name: Скачивание Node Exporter
+      get_url:
+        url: https://github.com/prometheus/node_exporter/releases/download/v1.7.0/node_exporter-1.7.0.linux-amd64.tar.gz
+        dest: /tmp
+        mode: '0755'
+
+    - name: Распаковка Node Exporter
+      unarchive:
+        src: /tmp/node_exporter-1.7.0.linux-amd64.tar.gz
+        dest: /opt
+        remote_src: yes
+
+    - name: Создание systemd файла для Node Exporter
+      copy:
+        content: |
+          [Unit]
+          Description=Node Exporter
+          After=network.target
+
+          [Service]
+          ExecStart=/opt/node_exporter-1.7.0.linux-amd64/node_exporter
+
+          [Install]
+          WantedBy=default.target
+        dest: /etc/systemd/system/node_exporter.service
+
+    - name: Перезагрузка daemon и запуск Node Exporter
+      systemd:
+        daemon_reload: yes
+        enabled: yes
+        name: node_exporter
+        state: started

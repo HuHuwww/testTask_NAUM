@@ -1,0 +1,11 @@
+---
+
+- hosts: naumen
+  user: root
+  become: true
+  become_method: su
+  become_user: root
+  roles:
+    - role: Prometheus
+      tags: prom
+    - role:  Grafana

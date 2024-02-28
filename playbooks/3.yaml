@@ -1,0 +1,68 @@
+---
+- hosts: naumen
+  become: yes
+  vars:
+    your_ip: '213.141.248.242'
+    range_ip: '91.232.196.0/24'
+
+  tasks:
+    - name: Установить пакет ufw
+      apt:
+        name: ufw
+        state: present
+
+    # - name: Запретить все входящее соединение
+    #   ufw:
+    #     rule: deny
+    #     direction: in
+
+    # - name: Запретить все исходящее соединение
+    #   ufw:
+    #     rule: deny
+    #     direction: out
+
+    - name: Ограничить внешний доступ к серверу (your_ip)
+      ufw:
+        rule: allow
+        port: '{{ item }}'
+        src: '{{ your_ip }}'
+      with_items: [22, 80, 443, 3001, 8081, 9101, 9091]
+
+    - name: Ограничить внешний доступ к серверу (range_ip)
+      ufw:
+        rule: allow
+        port: '{{ item }}'
+        src: '{{ range_ip }}'
+      with_items: [22, 80, 443, 3001, 8081, 9101, 9091]
+
+    # - name: Allow outgoing DNS (UDP)
+    #   ufw:
+    #     rule: allow
+    #     direction: out
+    #     proto: udp
+    #     port: '53'
+
+    # - name: Allow outgoing DNS (TCP)
+    #   ufw:
+    #     rule: allow
+    #     direction: out
+    #     proto: tcp
+    #     port: '53'
+
+    # - name: Allow outgoing DNS (TCP)
+    #   ufw:
+    #     rule: allow
+    #     direction: out
+    #     proto: tcp
+    #     port: '43'
+
+    # - name: Allow outgoing ICMP
+    #   ufw:
+    #     rule: allow
+    #     direction: out
+    #     port: '80'
+
+
+    - name: Включить ufw
+      ufw:
+        state: enabled

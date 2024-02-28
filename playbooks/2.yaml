@@ -1,0 +1,20 @@
+- hosts: naumen
+  become: yes
+
+  tasks:
+  
+    - name: Скачать файл часового пояса Москвы
+      get_url:
+        url: "http://www.iana.org/time-zones/repository/tzdata-latest.tar.gz"
+        dest: "/tmp/tzdata-latest.tar.gz"
+
+    - name: Распаковать файл часового пояса
+      unarchive:
+        src: "/tmp/tzdata-latest.tar.gz"
+        dest: "/usr/share/zoneinfo/"
+        remote_src: yes
+
+    - name: Установить московский часовой пояс
+      command: 
+        cmd: "timedatectl set-timezone Europe/Moscow"
+

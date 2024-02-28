@@ -1,0 +1,50 @@
+---
+
+- name: Security Settings And Install Grafana For Debian
+  block:
+    - name: Allow TCP Ports
+      iptables:
+        chain: INPUT
+        rule_num: '1'
+        action: insert
+        protocol: tcp
+        jump: ACCEPT
+        destination_port: '3000'
+
+    - name: Установить пакет musl
+      apt:
+        name: musl
+        state: present
+
+
+    - name: Install Grafana from local package on Debian Family
+      apt:
+        deb: /opt/grafana-enterprise_10.3.3_amd64.deb
+      notify:
+        - grafana systemd
+
+
+
+    # - name: Add APT Repository without signature check
+    #   apt_repository:
+    #     repo: deb [trusted=yes] https://packages.grafana.com/oss/deb stable main
+    #     state: present
+
+    # - name: Import Grafana Apt Key from file
+    #   apt_key:
+    #     file: /opt/gpg.key
+    #     state: present
+
+    # - name: Add APT Repository
+    #   apt_repository:
+    #     repo: deb https://packages.grafana.com/oss/deb stable main
+    #     state: present
+
+    # - name: Install Grafana on Debian Family
+    #   apt:
+    #     name: grafana
+    #     state: present
+    #   notify:
+    #     - grafana systemd
+  when:
+    ansible_os_family == "Debian"

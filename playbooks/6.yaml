@@ -1,0 +1,39 @@
+---
+- hosts: naumen
+  become: yes
+
+  tasks:
+    - name: Создать пользователя jmx_exporter
+      user:
+        name: jmx_exporter
+        system: yes
+
+    - name: Загрузить jmx_exporter
+      get_url:
+        url: https://repo.maven.apache.org/maven2/io/prometheus/jmx/jmx_prometheus_javaagent/0.20.0/jmx_prometheus_javaagent-0.20.0.jar
+        dest: /opt
+        mode: '0755'
+
+    - name: Создать службу systemd для jmx_exporter
+      copy:
+        dest: /etc/systemd/system/jmx_exporter.service
+        content: |
+          [Unit]
+          Description=JMX Exporter
+
+          [Service]
+          User=jmx_exporter
+          ExecStart=/usr/bin/java -javaagent:/opt/jmx_prometheus_javaagent-0.20.0.jar=8080:/etc/jmx_exporter/config.yaml -jar /opt/jenkins.war
+
+          [Install]
+          WantedBy=default.target
+
+    - name: Включить службу jmx_exporter при загрузке
+      systemd:
+        name: jmx_exporter
+        enabled: yes
+
+    - name: Запустить службу jmx_exporter
+      systemd:
+        name: jmx_exporter
+        state: started
