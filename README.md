@@ -6,6 +6,11 @@
 6. Настроить мониторинг при помощи Prometheus: ресурсов сервера (Node exporter), а также параметров работы JVM Jenkins (JMX Exporter). Данные мониторинга вывести в Grafana (поднять на этом же сервере). 
 7. Настроить доступ к поднятым сервисам по https с помощью nginx c использованием самоподписанного сертификата
 
+Список портов:
+	Grafana		3001
+ 	AlertManager	9091
+  	NodeExporter	9091
+   	Jenkins		8081
 
 ansible-galaxy init Prometheus
 
