@@ -66,3 +66,12 @@ Node Exporter
 SSH
 	eval "$(ssh-agent -s)"
     ssh-add ~/.ssh/naum
+
+
+NGINX + SSL: https://www.8host.com/blog/sozdanie-samopodpisannogo-ssl-sertifikata-dlya-nginx-v-ubuntu-16-04/
+Grafana + HTTPS: https://earthly.dev/blog/grafana-https-nginx-certbot/
+
+
+
+
+
